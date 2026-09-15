@@ -1,0 +1,10 @@
+{
+  "source": "tllm-4o6-svdq/tensorrt_llm/_torch/custom_ops/cute_dsl_custom_ops.py",
+  "source_sha256": "b9486a3436f7e0268b0a2f4c114d12d616e459f098d13704ad4f5d6c976eef42",
+  "class": "Sm100Bf16ContiguousGroupedGemmRunner",
+  "start_line": 8107,
+  "end_line": 8433,
+  "class_ast_identical": true,
+  "destination_sha256": "3779bdd02f3734cb60dde1df2209437a00460963b58f006ffaabe440679bd12e",
+  "import_adaptation": "standalone imports and torch device capability query"
+}

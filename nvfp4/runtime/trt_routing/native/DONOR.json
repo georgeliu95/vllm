@@ -1,0 +1,77 @@
+[
+  {
+    "source": "tllm-4o6-svdq/cpp/tensorrt_llm/kernels/trtllmGenKernels/blockScaleMoe/routing/RoutingCustom.cu",
+    "vendored": "include/tensorrt_llm/kernels/trtllmGenKernels/blockScaleMoe/routing/RoutingCustom.cu",
+    "sha256": "0b393bc6eda42e1e2a662f9d57138290072ac6278839a2b3267a5871eb6d5382"
+  },
+  {
+    "source": "tllm-4o6-svdq/cpp/tensorrt_llm/kernels/trtllmGenKernels/blockScaleMoe/routing/RoutingFromTopKIds.cu",
+    "vendored": "include/tensorrt_llm/kernels/trtllmGenKernels/blockScaleMoe/routing/RoutingFromTopKIds.cu",
+    "sha256": "5b2aff45d52f2a2d52e2f3b7e0c53c067fee0377867c06c51201956a3b08c122"
+  },
+  {
+    "source": "tllm-4o6-svdq/cpp/tensorrt_llm/kernels/trtllmGenKernels/blockScaleMoe/routing/RoutingCustomPolicy.cuh",
+    "vendored": "include/tensorrt_llm/kernels/trtllmGenKernels/blockScaleMoe/routing/RoutingCustomPolicy.cuh",
+    "sha256": "87074a7772a3d687635e32be7b827b482af2468b37df14c4ef57393192de36ae"
+  },
+  {
+    "source": "tllm-4o6-svdq/cpp/tensorrt_llm/kernels/trtllmGenKernels/blockScaleMoe/routing/RoutingKernel.cuh",
+    "vendored": "include/tensorrt_llm/kernels/trtllmGenKernels/blockScaleMoe/routing/RoutingKernel.cuh",
+    "sha256": "362ca67f5f07419a8fb79f9213e10ff0d969d159cbbfaa6a9483efacf10a40fd"
+  },
+  {
+    "source": "tllm-4o6-svdq/cpp/tensorrt_llm/kernels/trtllmGenKernels/blockScaleMoe/routing/RoutingKernel.h",
+    "vendored": "include/tensorrt_llm/kernels/trtllmGenKernels/blockScaleMoe/routing/RoutingKernel.h",
+    "sha256": "fcd74c17b5164257355790ee987d0f7086fe43360173cb00aac4e1d5105096e1"
+  },
+  {
+    "source": "tllm-4o6-svdq/cpp/tensorrt_llm/kernels/trtllmGenKernels/blockScaleMoe/routing/RoutingDevKernel.h",
+    "vendored": "include/tensorrt_llm/kernels/trtllmGenKernels/blockScaleMoe/routing/RoutingDevKernel.h",
+    "sha256": "d917785e27b5d4a708a33169aeaf207cfe6cd0da8c42025980bcd7b50331d68b"
+  },
+  {
+    "source": "tllm-4o6-svdq/cpp/tensorrt_llm/kernels/trtllmGenKernels/blockScaleMoe/routing/RoutingKernelTopK.cuh",
+    "vendored": "include/tensorrt_llm/kernels/trtllmGenKernels/blockScaleMoe/routing/RoutingKernelTopK.cuh",
+    "sha256": "a335f3c438c4cdfe58bd2acc7a95a8daed27a05e16b471b7219f0f9279d1d329"
+  },
+  {
+    "source": "tllm-4o6-svdq/cpp/tensorrt_llm/kernels/trtllmGenKernels/blockScaleMoe/routing/IntFastDiv.h",
+    "vendored": "include/tensorrt_llm/kernels/trtllmGenKernels/blockScaleMoe/routing/IntFastDiv.h",
+    "sha256": "175bfb151af50f2b149c6dd51d5b003c76c5658b70bd7ce75781620d18563bac"
+  },
+  {
+    "source": "tllm-4o6-svdq/cpp/tensorrt_llm/kernels/trtllmGenKernels/blockScaleMoe/DevKernel.h",
+    "vendored": "include/tensorrt_llm/kernels/trtllmGenKernels/blockScaleMoe/DevKernel.h",
+    "sha256": "eda9b23da99995ccb7818ca2ade725b2eb71f65059d59daa146ed53699f805e9"
+  },
+  {
+    "source": "tllm-4o6-svdq/cpp/tensorrt_llm/kernels/trtllmGenKernels/batchedGemm/trtllmGen_bmm_export/trtllm/gen/DtypeDecl.h",
+    "vendored": "include/tensorrt_llm/kernels/trtllmGenKernels/batchedGemm/trtllmGen_bmm_export/trtllm/gen/DtypeDecl.h",
+    "sha256": "e605e9469710eaec5903016072657eac999e24d51cad9fcca6294c39360a7671"
+  },
+  {
+    "source": "tllm-4o6-svdq/cpp/tensorrt_llm/kernels/trtllmGenKernels/batchedGemm/trtllmGen_bmm_export/trtllm/gen/SfLayoutDecl.h",
+    "vendored": "include/tensorrt_llm/kernels/trtllmGenKernels/batchedGemm/trtllmGen_bmm_export/trtllm/gen/SfLayoutDecl.h",
+    "sha256": "6eb01c1e8807e4cd8bb81a814766de077304bf1c5c0476a98d081b7bef8ba352"
+  },
+  {
+    "source": "tllm-4o6-svdq/cpp/tensorrt_llm/kernels/trtllmGenKernels/batchedGemm/trtllmGen_bmm_export/trtllm/gen/MmaDecl.h",
+    "vendored": "include/tensorrt_llm/kernels/trtllmGenKernels/batchedGemm/trtllmGen_bmm_export/trtllm/gen/MmaDecl.h",
+    "sha256": "4fa5eac9f06fd1caf71b1fd4d81cd12f99eaebdd4f7d9e758d55e97504eb87b8"
+  },
+  {
+    "source": "tllm-4o6-svdq/cpp/tensorrt_llm/kernels/trtllmGenKernels/batchedGemm/trtllmGen_bmm_export/trtllm/gen/CommonUtils.h",
+    "vendored": "include/tensorrt_llm/kernels/trtllmGenKernels/batchedGemm/trtllmGen_bmm_export/trtllm/gen/CommonUtils.h",
+    "sha256": "6ead95945940beb8b1d932ba4fec4989a788fe2bec40e82edf424cb7f7738d89"
+  },
+  {
+    "source": "tllm-4o6-svdq/cpp/include/tensorrt_llm/kernels/archCondition.h",
+    "vendored": "include/tensorrt_llm/kernels/archCondition.h",
+    "sha256": "0df6a3e84fe4e0d8e44eac70b5382c91ac36e6642b55000da04e49dde78b2d0a"
+  },
+  {
+    "source": "tllm-4o6-svdq/cpp/include/tensorrt_llm/common/config.h",
+    "vendored": "include/tensorrt_llm/common/config.h",
+    "sha256": "52c458c27bb842ef2e2af83e58f98a8435723b1afa76baf9474cd065e6bc2828"
+  }
+]

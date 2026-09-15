@@ -1,3 +1,5 @@
+> **Independent NVFP4 / 4o6 / SVDQ feature branch:** see [nvfp4/README.md](nvfp4/README.md) for the supported runtime, native builds, evaluation and tests.
+
 <!-- markdownlint-disable MD001 MD041 -->
 <p align="center">
   <picture>

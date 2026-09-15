@@ -1,0 +1,551 @@
+schema_version = 2
+
+[stacks.vllm]
+integration = "vllm"
+pixi_environment = "vllm"
+source_paths = ["nvfp4/runtime", "python/inferlab-adapter-sdk", "python/inferlab-integration-vllm"]
+
+[benches.qualification]
+request_source = { kind = "random", input_tokens = 128, output_tokens = 32 }
+concurrency = [1]
+prompts_per_concurrency = 2
+warmup_prompts_per_concurrency = 1
+seed = 1234
+request_body = { temperature = 0.0 }
+timeout_seconds = 1800
+
+[workload_suites.qualification]
+benches = ["prime-short-c1", "qualification"]
+
+[workload_suites.performance]
+benches = ["prime-short-c1", "prime-short-c16", "prime-prefill-c1", "prime-prefill-c16", "short-c1", "short-c16", "prefill-c1", "prefill-c16", "decode-c1", "decode-c16"]
+
+[benches.short-c1]
+request_source = { kind = "random", input_tokens = 128, output_tokens = 128 }
+concurrency = [1]
+prompts_per_concurrency = 2
+warmup_prompts_per_concurrency = 1
+seed = 1234
+request_body = { temperature = 0.0 }
+timeout_seconds = 3600
+
+[benches.short-c16]
+request_source = { kind = "random", input_tokens = 128, output_tokens = 128 }
+concurrency = [16]
+prompts_per_concurrency = 2
+warmup_prompts_per_concurrency = 1
+seed = 1234
+request_body = { temperature = 0.0 }
+timeout_seconds = 3600
+
+[benches.prefill-c1]
+request_source = { kind = "random", input_tokens = 2048, output_tokens = 128 }
+concurrency = [1]
+prompts_per_concurrency = 2
+warmup_prompts_per_concurrency = 1
+seed = 1234
+request_body = { temperature = 0.0 }
+timeout_seconds = 3600
+
+[benches.prefill-c16]
+request_source = { kind = "random", input_tokens = 2048, output_tokens = 128 }
+concurrency = [16]
+prompts_per_concurrency = 2
+warmup_prompts_per_concurrency = 1
+seed = 1234
+request_body = { temperature = 0.0 }
+timeout_seconds = 3600
+
+[benches.decode-c1]
+request_source = { kind = "random", input_tokens = 128, output_tokens = 1024 }
+concurrency = [1]
+prompts_per_concurrency = 1
+warmup_prompts_per_concurrency = 1
+seed = 1234
+request_body = { temperature = 0.0 }
+timeout_seconds = 3600
+
+[benches.decode-c16]
+request_source = { kind = "random", input_tokens = 128, output_tokens = 1024 }
+concurrency = [16]
+prompts_per_concurrency = 1
+warmup_prompts_per_concurrency = 1
+seed = 1234
+request_body = { temperature = 0.0 }
+timeout_seconds = 3600
+
+[models.qwen3-30b-a3b-4o6]
+served_name = "benchmark"
+
+[servers.qwen3-30b-a3b-4o6]
+stack = "vllm"
+model = "qwen3-30b-a3b-4o6"
+topology = "single"
+readiness_timeout_seconds = 900
+
+[servers.qwen3-30b-a3b-4o6.settings]
+max_model_len = 4096
+gpu_memory_utilization = 0.90
+extra_args = ["--dtype", "bfloat16", "--enforce-eager", "--max-num-batched-tokens", "8192", "--max-num-seqs", "16", "--no-enable-prefix-caching", "--kernel-config", '{"enable_flashinfer_autotune":false}', "--seed", "1234"]
+
+[recipes.qwen3-30b-a3b-4o6]
+server = "qwen3-30b-a3b-4o6"
+workload_suite = "performance"
+
+[recipes.qwen3-30b-a3b-4o6-qualify]
+server = "qwen3-30b-a3b-4o6"
+workload_suite = "qualification"
+
+[models.qwen3-30b-a3b-bf16]
+served_name = "benchmark"
+
+[servers.qwen3-30b-a3b-bf16]
+stack = "vllm"
+model = "qwen3-30b-a3b-bf16"
+topology = "single"
+readiness_timeout_seconds = 900
+
+[servers.qwen3-30b-a3b-bf16.settings]
+max_model_len = 4096
+gpu_memory_utilization = 0.90
+extra_args = ["--dtype", "bfloat16", "--enforce-eager", "--max-num-batched-tokens", "8192", "--max-num-seqs", "16", "--no-enable-prefix-caching", "--kernel-config", '{"enable_flashinfer_autotune":false}', "--seed", "1234"]
+
+[recipes.qwen3-30b-a3b-bf16]
+server = "qwen3-30b-a3b-bf16"
+workload_suite = "performance"
+
+[recipes.qwen3-30b-a3b-bf16-qualify]
+server = "qwen3-30b-a3b-bf16"
+workload_suite = "qualification"
+
+[models.qwen3-30b-a3b-nvfp4]
+served_name = "benchmark"
+
+[servers.qwen3-30b-a3b-nvfp4]
+stack = "vllm"
+model = "qwen3-30b-a3b-nvfp4"
+topology = "single"
+readiness_timeout_seconds = 900
+
+[servers.qwen3-30b-a3b-nvfp4.settings]
+max_model_len = 4096
+gpu_memory_utilization = 0.90
+extra_args = ["--dtype", "bfloat16", "--enforce-eager", "--max-num-batched-tokens", "8192", "--max-num-seqs", "16", "--no-enable-prefix-caching", "--kernel-config", '{"enable_flashinfer_autotune":false}', "--seed", "1234"]
+
+[recipes.qwen3-30b-a3b-nvfp4]
+server = "qwen3-30b-a3b-nvfp4"
+workload_suite = "performance"
+
+[recipes.qwen3-30b-a3b-nvfp4-qualify]
+server = "qwen3-30b-a3b-nvfp4"
+workload_suite = "qualification"
+
+[models.qwen3-30b-a3b-svdq]
+served_name = "benchmark"
+
+[servers.qwen3-30b-a3b-svdq]
+stack = "vllm"
+model = "qwen3-30b-a3b-svdq"
+topology = "single"
+readiness_timeout_seconds = 900
+
+[servers.qwen3-30b-a3b-svdq.settings]
+max_model_len = 4096
+gpu_memory_utilization = 0.90
+extra_args = ["--dtype", "bfloat16", "--enforce-eager", "--max-num-batched-tokens", "8192", "--max-num-seqs", "16", "--no-enable-prefix-caching", "--kernel-config", '{"enable_flashinfer_autotune":false}', "--seed", "1234"]
+
+[recipes.qwen3-30b-a3b-svdq]
+server = "qwen3-30b-a3b-svdq"
+workload_suite = "performance"
+
+[recipes.qwen3-30b-a3b-svdq-qualify]
+server = "qwen3-30b-a3b-svdq"
+workload_suite = "qualification"
+
+[models.qwen3-8b-4o6]
+served_name = "benchmark"
+
+[servers.qwen3-8b-4o6]
+stack = "vllm"
+model = "qwen3-8b-4o6"
+topology = "single"
+readiness_timeout_seconds = 900
+
+[servers.qwen3-8b-4o6.settings]
+max_model_len = 4096
+gpu_memory_utilization = 0.90
+extra_args = ["--dtype", "bfloat16", "--enforce-eager", "--max-num-batched-tokens", "8192", "--max-num-seqs", "16", "--no-enable-prefix-caching", "--kernel-config", '{"enable_flashinfer_autotune":false}', "--seed", "1234"]
+
+[recipes.qwen3-8b-4o6]
+server = "qwen3-8b-4o6"
+workload_suite = "performance"
+
+[recipes.qwen3-8b-4o6-qualify]
+server = "qwen3-8b-4o6"
+workload_suite = "qualification"
+
+[models.qwen3-8b-bf16]
+served_name = "benchmark"
+
+[servers.qwen3-8b-bf16]
+stack = "vllm"
+model = "qwen3-8b-bf16"
+topology = "single"
+readiness_timeout_seconds = 900
+
+[servers.qwen3-8b-bf16.settings]
+max_model_len = 4096
+gpu_memory_utilization = 0.90
+extra_args = ["--dtype", "bfloat16", "--enforce-eager", "--max-num-batched-tokens", "8192", "--max-num-seqs", "16", "--no-enable-prefix-caching", "--kernel-config", '{"enable_flashinfer_autotune":false}', "--seed", "1234"]
+
+[recipes.qwen3-8b-bf16]
+server = "qwen3-8b-bf16"
+workload_suite = "performance"
+
+[recipes.qwen3-8b-bf16-qualify]
+server = "qwen3-8b-bf16"
+workload_suite = "qualification"
+
+[models.qwen3-8b-nvfp4]
+served_name = "benchmark"
+
+[servers.qwen3-8b-nvfp4]
+stack = "vllm"
+model = "qwen3-8b-nvfp4"
+topology = "single"
+readiness_timeout_seconds = 900
+
+[servers.qwen3-8b-nvfp4.settings]
+max_model_len = 4096
+gpu_memory_utilization = 0.90
+extra_args = ["--dtype", "bfloat16", "--enforce-eager", "--max-num-batched-tokens", "8192", "--max-num-seqs", "16", "--no-enable-prefix-caching", "--kernel-config", '{"enable_flashinfer_autotune":false}', "--seed", "1234"]
+
+[recipes.qwen3-8b-nvfp4]
+server = "qwen3-8b-nvfp4"
+workload_suite = "performance"
+
+[recipes.qwen3-8b-nvfp4-qualify]
+server = "qwen3-8b-nvfp4"
+workload_suite = "qualification"
+
+[models.qwen3-8b-svdq]
+served_name = "benchmark"
+
+[servers.qwen3-8b-svdq]
+stack = "vllm"
+model = "qwen3-8b-svdq"
+topology = "single"
+readiness_timeout_seconds = 900
+
+[servers.qwen3-8b-svdq.settings]
+max_model_len = 4096
+gpu_memory_utilization = 0.90
+extra_args = ["--dtype", "bfloat16", "--enforce-eager", "--max-num-batched-tokens", "8192", "--max-num-seqs", "16", "--no-enable-prefix-caching", "--kernel-config", '{"enable_flashinfer_autotune":false}', "--seed", "1234"]
+
+[recipes.qwen3-8b-svdq]
+server = "qwen3-8b-svdq"
+workload_suite = "performance"
+
+[recipes.qwen3-8b-svdq-qualify]
+server = "qwen3-8b-svdq"
+workload_suite = "qualification"
+
+[models.qwen3-5-27b-4o6]
+served_name = "benchmark"
+
+[servers.qwen3-5-27b-4o6]
+stack = "vllm"
+model = "qwen3-5-27b-4o6"
+topology = "single"
+readiness_timeout_seconds = 900
+
+[servers.qwen3-5-27b-4o6.settings]
+max_model_len = 4096
+gpu_memory_utilization = 0.90
+extra_args = ["--dtype", "bfloat16", "--enforce-eager", "--max-num-batched-tokens", "8192", "--max-num-seqs", "16", "--no-enable-prefix-caching", "--kernel-config", '{"enable_flashinfer_autotune":false}', "--seed", "1234"]
+
+[recipes.qwen3-5-27b-4o6]
+server = "qwen3-5-27b-4o6"
+workload_suite = "performance"
+
+[recipes.qwen3-5-27b-4o6-qualify]
+server = "qwen3-5-27b-4o6"
+workload_suite = "qualification"
+
+[models.qwen3-5-27b-bf16]
+served_name = "benchmark"
+
+[servers.qwen3-5-27b-bf16]
+stack = "vllm"
+model = "qwen3-5-27b-bf16"
+topology = "single"
+readiness_timeout_seconds = 900
+
+[servers.qwen3-5-27b-bf16.settings]
+max_model_len = 4096
+gpu_memory_utilization = 0.90
+extra_args = ["--dtype", "bfloat16", "--enforce-eager", "--max-num-batched-tokens", "8192", "--max-num-seqs", "16", "--no-enable-prefix-caching", "--kernel-config", '{"enable_flashinfer_autotune":false}', "--seed", "1234"]
+
+[recipes.qwen3-5-27b-bf16]
+server = "qwen3-5-27b-bf16"
+workload_suite = "performance"
+
+[recipes.qwen3-5-27b-bf16-qualify]
+server = "qwen3-5-27b-bf16"
+workload_suite = "qualification"
+
+[models.qwen3-5-27b-nvfp4]
+served_name = "benchmark"
+
+[servers.qwen3-5-27b-nvfp4]
+stack = "vllm"
+model = "qwen3-5-27b-nvfp4"
+topology = "single"
+readiness_timeout_seconds = 900
+
+[servers.qwen3-5-27b-nvfp4.settings]
+max_model_len = 4096
+gpu_memory_utilization = 0.90
+extra_args = ["--dtype", "bfloat16", "--enforce-eager", "--max-num-batched-tokens", "8192", "--max-num-seqs", "16", "--no-enable-prefix-caching", "--kernel-config", '{"enable_flashinfer_autotune":false}', "--seed", "1234"]
+
+[recipes.qwen3-5-27b-nvfp4]
+server = "qwen3-5-27b-nvfp4"
+workload_suite = "performance"
+
+[recipes.qwen3-5-27b-nvfp4-qualify]
+server = "qwen3-5-27b-nvfp4"
+workload_suite = "qualification"
+
+[models.qwen3-5-27b-svdq]
+served_name = "benchmark"
+
+[servers.qwen3-5-27b-svdq]
+stack = "vllm"
+model = "qwen3-5-27b-svdq"
+topology = "single"
+readiness_timeout_seconds = 900
+
+[servers.qwen3-5-27b-svdq.settings]
+max_model_len = 4096
+gpu_memory_utilization = 0.90
+extra_args = ["--dtype", "bfloat16", "--enforce-eager", "--max-num-batched-tokens", "8192", "--max-num-seqs", "16", "--no-enable-prefix-caching", "--kernel-config", '{"enable_flashinfer_autotune":false}', "--seed", "1234"]
+
+[recipes.qwen3-5-27b-svdq]
+server = "qwen3-5-27b-svdq"
+workload_suite = "performance"
+
+[recipes.qwen3-5-27b-svdq-qualify]
+server = "qwen3-5-27b-svdq"
+workload_suite = "qualification"
+
+[models.qwen3-5-35b-a3b-4o6]
+served_name = "benchmark"
+
+[servers.qwen3-5-35b-a3b-4o6]
+stack = "vllm"
+model = "qwen3-5-35b-a3b-4o6"
+topology = "single"
+readiness_timeout_seconds = 900
+
+[servers.qwen3-5-35b-a3b-4o6.settings]
+max_model_len = 4096
+gpu_memory_utilization = 0.90
+extra_args = ["--dtype", "bfloat16", "--enforce-eager", "--max-num-batched-tokens", "8192", "--max-num-seqs", "16", "--no-enable-prefix-caching", "--kernel-config", '{"enable_flashinfer_autotune":false}', "--seed", "1234"]
+
+[recipes.qwen3-5-35b-a3b-4o6]
+server = "qwen3-5-35b-a3b-4o6"
+workload_suite = "performance"
+
+[recipes.qwen3-5-35b-a3b-4o6-qualify]
+server = "qwen3-5-35b-a3b-4o6"
+workload_suite = "qualification"
+
+[models.qwen3-5-35b-a3b-bf16]
+served_name = "benchmark"
+
+[servers.qwen3-5-35b-a3b-bf16]
+stack = "vllm"
+model = "qwen3-5-35b-a3b-bf16"
+topology = "single"
+readiness_timeout_seconds = 900
+
+[servers.qwen3-5-35b-a3b-bf16.settings]
+max_model_len = 4096
+gpu_memory_utilization = 0.90
+extra_args = ["--dtype", "bfloat16", "--enforce-eager", "--max-num-batched-tokens", "8192", "--max-num-seqs", "16", "--no-enable-prefix-caching", "--kernel-config", '{"enable_flashinfer_autotune":false}', "--seed", "1234"]
+
+[recipes.qwen3-5-35b-a3b-bf16]
+server = "qwen3-5-35b-a3b-bf16"
+workload_suite = "performance"
+
+[recipes.qwen3-5-35b-a3b-bf16-qualify]
+server = "qwen3-5-35b-a3b-bf16"
+workload_suite = "qualification"
+
+[models.qwen3-5-35b-a3b-nvfp4]
+served_name = "benchmark"
+
+[servers.qwen3-5-35b-a3b-nvfp4]
+stack = "vllm"
+model = "qwen3-5-35b-a3b-nvfp4"
+topology = "single"
+readiness_timeout_seconds = 900
+
+[servers.qwen3-5-35b-a3b-nvfp4.settings]
+max_model_len = 4096
+gpu_memory_utilization = 0.90
+extra_args = ["--dtype", "bfloat16", "--enforce-eager", "--max-num-batched-tokens", "8192", "--max-num-seqs", "16", "--no-enable-prefix-caching", "--kernel-config", '{"enable_flashinfer_autotune":false}', "--seed", "1234"]
+
+[recipes.qwen3-5-35b-a3b-nvfp4]
+server = "qwen3-5-35b-a3b-nvfp4"
+workload_suite = "performance"
+
+[recipes.qwen3-5-35b-a3b-nvfp4-qualify]
+server = "qwen3-5-35b-a3b-nvfp4"
+workload_suite = "qualification"
+
+[models.qwen3-5-35b-a3b-svdq]
+served_name = "benchmark"
+
+[servers.qwen3-5-35b-a3b-svdq]
+stack = "vllm"
+model = "qwen3-5-35b-a3b-svdq"
+topology = "single"
+readiness_timeout_seconds = 900
+
+[servers.qwen3-5-35b-a3b-svdq.settings]
+max_model_len = 4096
+gpu_memory_utilization = 0.90
+extra_args = ["--dtype", "bfloat16", "--enforce-eager", "--max-num-batched-tokens", "8192", "--max-num-seqs", "16", "--no-enable-prefix-caching", "--kernel-config", '{"enable_flashinfer_autotune":false}', "--seed", "1234"]
+
+[recipes.qwen3-5-35b-a3b-svdq]
+server = "qwen3-5-35b-a3b-svdq"
+workload_suite = "performance"
+
+[recipes.qwen3-5-35b-a3b-svdq-qualify]
+server = "qwen3-5-35b-a3b-svdq"
+workload_suite = "qualification"
+
+[models.qwen3-8-27b-4o6]
+served_name = "benchmark"
+
+[servers.qwen3-8-27b-4o6]
+stack = "vllm"
+model = "qwen3-8-27b-4o6"
+topology = "single"
+readiness_timeout_seconds = 900
+
+[servers.qwen3-8-27b-4o6.settings]
+max_model_len = 4096
+gpu_memory_utilization = 0.90
+extra_args = ["--dtype", "bfloat16", "--enforce-eager", "--max-num-batched-tokens", "8192", "--max-num-seqs", "16", "--no-enable-prefix-caching", "--kernel-config", '{"enable_flashinfer_autotune":false}', "--seed", "1234"]
+
+[recipes.qwen3-8-27b-4o6]
+server = "qwen3-8-27b-4o6"
+workload_suite = "performance"
+
+[recipes.qwen3-8-27b-4o6-qualify]
+server = "qwen3-8-27b-4o6"
+workload_suite = "qualification"
+
+[models.qwen3-8-27b-bf16]
+served_name = "benchmark"
+
+[servers.qwen3-8-27b-bf16]
+stack = "vllm"
+model = "qwen3-8-27b-bf16"
+topology = "single"
+readiness_timeout_seconds = 900
+
+[servers.qwen3-8-27b-bf16.settings]
+max_model_len = 4096
+gpu_memory_utilization = 0.90
+extra_args = ["--dtype", "bfloat16", "--enforce-eager", "--max-num-batched-tokens", "8192", "--max-num-seqs", "16", "--no-enable-prefix-caching", "--kernel-config", '{"enable_flashinfer_autotune":false}', "--seed", "1234"]
+
+[recipes.qwen3-8-27b-bf16]
+server = "qwen3-8-27b-bf16"
+workload_suite = "performance"
+
+[recipes.qwen3-8-27b-bf16-qualify]
+server = "qwen3-8-27b-bf16"
+workload_suite = "qualification"
+
+[models.qwen3-8-27b-nvfp4]
+served_name = "benchmark"
+
+[servers.qwen3-8-27b-nvfp4]
+stack = "vllm"
+model = "qwen3-8-27b-nvfp4"
+topology = "single"
+readiness_timeout_seconds = 900
+
+[servers.qwen3-8-27b-nvfp4.settings]
+max_model_len = 4096
+gpu_memory_utilization = 0.90
+extra_args = ["--dtype", "bfloat16", "--enforce-eager", "--max-num-batched-tokens", "8192", "--max-num-seqs", "16", "--no-enable-prefix-caching", "--kernel-config", '{"enable_flashinfer_autotune":false}', "--seed", "1234"]
+
+[recipes.qwen3-8-27b-nvfp4]
+server = "qwen3-8-27b-nvfp4"
+workload_suite = "performance"
+
+[recipes.qwen3-8-27b-nvfp4-qualify]
+server = "qwen3-8-27b-nvfp4"
+workload_suite = "qualification"
+
+[models.qwen3-8-27b-svdq]
+served_name = "benchmark"
+
+[servers.qwen3-8-27b-svdq]
+stack = "vllm"
+model = "qwen3-8-27b-svdq"
+topology = "single"
+readiness_timeout_seconds = 900
+
+[servers.qwen3-8-27b-svdq.settings]
+max_model_len = 4096
+gpu_memory_utilization = 0.90
+extra_args = ["--dtype", "bfloat16", "--enforce-eager", "--max-num-batched-tokens", "8192", "--max-num-seqs", "16", "--no-enable-prefix-caching", "--kernel-config", '{"enable_flashinfer_autotune":false}', "--seed", "1234"]
+
+[recipes.qwen3-8-27b-svdq]
+server = "qwen3-8-27b-svdq"
+workload_suite = "performance"
+
+[recipes.qwen3-8-27b-svdq-qualify]
+server = "qwen3-8-27b-svdq"
+workload_suite = "qualification"
+
+[benches.prime-short-c1]
+request_source = { kind = "random", input_tokens = 128, output_tokens = 32 }
+concurrency = [1]
+prompts_per_concurrency = 2
+warmup_prompts_per_concurrency = 0
+seed = 9876
+request_body = { temperature = 0.0 }
+timeout_seconds = 3600
+
+[benches.prime-short-c16]
+request_source = { kind = "random", input_tokens = 128, output_tokens = 32 }
+concurrency = [16]
+prompts_per_concurrency = 2
+warmup_prompts_per_concurrency = 0
+seed = 9876
+request_body = { temperature = 0.0 }
+timeout_seconds = 3600
+
+[benches.prime-prefill-c1]
+request_source = { kind = "random", input_tokens = 2048, output_tokens = 32 }
+concurrency = [1]
+prompts_per_concurrency = 2
+warmup_prompts_per_concurrency = 0
+seed = 9876
+request_body = { temperature = 0.0 }
+timeout_seconds = 3600
+
+[benches.prime-prefill-c16]
+request_source = { kind = "random", input_tokens = 2048, output_tokens = 32 }
+concurrency = [16]
+prompts_per_concurrency = 2
+warmup_prompts_per_concurrency = 0
+seed = 9876
+request_body = { temperature = 0.0 }
+timeout_seconds = 3600

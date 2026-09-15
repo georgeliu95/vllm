@@ -1,0 +1,71 @@
+# Copy to .inferlab/local.toml in your dedicated InferLab workspace.
+default_placement = "local"
+
+[machines.local]
+host = "127.0.0.1"
+devices = [0]
+ports = [8211]
+cache_root = "/tmp/inferlab-nvfp4-cache"
+
+[placements.local]
+machines = ["local"]
+
+[model_weights.qwen3-30b-a3b-4o6]
+locator = "/models/qwen3-30b-a3b-4o6"
+
+[model_weights.qwen3-30b-a3b-bf16]
+locator = "/models/qwen3-30b-a3b-bf16"
+
+[model_weights.qwen3-30b-a3b-nvfp4]
+locator = "/models/qwen3-30b-a3b-nvfp4"
+
+[model_weights.qwen3-30b-a3b-svdq]
+locator = "/models/qwen3-30b-a3b-svdq"
+
+[model_weights.qwen3-8b-4o6]
+locator = "/models/qwen3-8b-4o6"
+
+[model_weights.qwen3-8b-bf16]
+locator = "/models/qwen3-8b-bf16"
+
+[model_weights.qwen3-8b-nvfp4]
+locator = "/models/qwen3-8b-nvfp4"
+
+[model_weights.qwen3-8b-svdq]
+locator = "/models/qwen3-8b-svdq"
+
+[model_weights.qwen3-5-27b-4o6]
+locator = "/models/qwen3-5-27b-4o6"
+
+[model_weights.qwen3-5-27b-bf16]
+locator = "/models/qwen3-5-27b-bf16"
+
+[model_weights.qwen3-5-27b-nvfp4]
+locator = "/models/qwen3-5-27b-nvfp4"
+
+[model_weights.qwen3-5-27b-svdq]
+locator = "/models/qwen3-5-27b-svdq"
+
+[model_weights.qwen3-5-35b-a3b-4o6]
+locator = "/models/qwen3-5-35b-a3b-4o6"
+
+[model_weights.qwen3-5-35b-a3b-bf16]
+locator = "/models/qwen3-5-35b-a3b-bf16"
+
+[model_weights.qwen3-5-35b-a3b-nvfp4]
+locator = "/models/qwen3-5-35b-a3b-nvfp4"
+
+[model_weights.qwen3-5-35b-a3b-svdq]
+locator = "/models/qwen3-5-35b-a3b-svdq"
+
+[model_weights.qwen3-8-27b-4o6]
+locator = "/models/qwen3-8-27b-4o6"
+
+[model_weights.qwen3-8-27b-bf16]
+locator = "/models/qwen3-8-27b-bf16"
+
+[model_weights.qwen3-8-27b-nvfp4]
+locator = "/models/qwen3-8-27b-nvfp4"
+
+[model_weights.qwen3-8-27b-svdq]
+locator = "/models/qwen3-8-27b-svdq"

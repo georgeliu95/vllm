@@ -1,0 +1,22 @@
+# Independent component checks; preserve the measured donor source formatting.
+repos:
+  - repo: local
+    hooks:
+      - id: nvfp4-python
+        name: NVFP4 Python correctness lint
+        entry: ruff check --isolated --select E9,F63,F7,F82
+        language: system
+        files: ^nvfp4/.*\.py$
+      - id: nvfp4-shell
+        name: NVFP4 shell syntax
+        entry: bash -c 'for path; do bash -n "$path" || exit; done' --
+        language: system
+        files: ^nvfp4/.*\.sh$
+        types: [shell]
+        require_serial: true
+      - id: nvfp4-source
+        name: NVFP4 pinned source verification
+        entry: sha256sum -c nvfp4/SOURCE_SHA256SUMS
+        language: system
+        files: ^nvfp4/(runtime|native|SOURCE_SHA256SUMS)
+        pass_filenames: false

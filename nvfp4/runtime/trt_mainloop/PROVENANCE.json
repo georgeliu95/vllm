@@ -1,0 +1,50 @@
+[
+  {
+    "source": "tllm-4o6-svdq/tensorrt_llm/_torch/cute_dsl_kernels/blackwell/blockscaled_contiguous_gather_grouped_gemm_act_fusion.py",
+    "sha256": "1fd1cf1f24a20e5e652904b797a689b48ef2c5742735298d60917026b8911d02",
+    "destination": "blockscaled_contiguous_gather_grouped_gemm_act_fusion.py",
+    "change": "standalone activation import; live-row mask for amax; linear 3D CTA scratch/count; register partials, warp-reduced CTA maxima and cooperative last-CTA reduction"
+  },
+  {
+    "source": "tllm-4o6-svdq/tensorrt_llm/_torch/cute_dsl_kernels/blackwell/blockscaled_contiguous_grouped_gemm_finalize_fusion.py",
+    "sha256": "e89c8c42e8b897ab14c25db967ab90960f23dcf19face1ac294e29d392179d7b",
+    "destination": "blockscaled_contiguous_grouped_gemm_finalize_fusion.py",
+    "change": "none"
+  },
+  {
+    "source": "tllm-4o6-svdq/tensorrt_llm/_torch/cute_dsl_kernels/blackwell/bf16_contiguous_grouped_gemm.py",
+    "sha256": "7d5a6b4d4f5e107f2f0a76f10019ac4ec094e8b9def7416e4f3b8e205cef30fb",
+    "destination": "bf16_contiguous_grouped_gemm.py",
+    "change": "none"
+  },
+  {
+    "source": "tllm-4o6-svdq/tensorrt_llm/_torch/cute_dsl_kernels/blackwell/custom_pipeline.py",
+    "sha256": "e9af4c22ef85410b91d9561b8d99847693e578e1cfd58e130c58d23fffaea10e",
+    "destination": "custom_pipeline.py",
+    "change": "none"
+  },
+  {
+    "source": "tllm-4o6-svdq/tensorrt_llm/_torch/cute_dsl_kernels/blackwell/utils.py",
+    "sha256": "7b65989ebbd467b48d2957d0a09ee7b0c27716c5249c8daed49db9e890713b58",
+    "destination": "utils.py",
+    "change": "none"
+  },
+  {
+    "source": "tllm-4o6-svdq/tensorrt_llm/_torch/cute_dsl_kernels/blackwell/dense_gemm_persistent.py",
+    "sha256": "3aba996228ae7a109ad3541e2a2a9e79d0333ab8331e24af74f9d4bc92f5f4cb",
+    "destination": "dense_gemm_persistent.py",
+    "change": "none"
+  },
+  {
+    "source": "tllm-4o6-svdq/tensorrt_llm/_torch/custom_ops/cute_dsl_custom_ops.py",
+    "sha256": "b9486a3436f7e0268b0a2f4c114d12d616e459f098d13704ad4f5d6c976eef42",
+    "destination": "runners.py",
+    "change": "AST-extracted FC13/FC2/BF16 runners, forward/get_cached/init and required helpers; no autotuner dependency; standalone device/import bindings"
+  },
+  {
+    "source": "tllm-4o6-svdq/tensorrt_llm/_torch/utils.py",
+    "sha256": "28b51cfbec75bf95065139ebb648a33a8ab7d8e2251752e8281e0025ccf7e803",
+    "destination": "activation.py",
+    "change": "AST-extracted ActivationType enum and is_gated_activation"
+  }
+]
