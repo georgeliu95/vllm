@@ -188,9 +188,9 @@ def _run_4o6_svdq_moe_chunk(
         get_cute_dtype,
     )
     from vllm.utils.flashinfer import (
-        flashinfer_cutedsl_grouped_gemm_nt_masked,
         silu_and_mul_scaled_nvfp4_experts_quantize,
     )
+    from .sm120_grouped import dispatch_grouped_gemm_nt_masked
 
     experts, _, hidden = hidden_states.shape
     intermediate = w2.shape[-1] * 2
@@ -207,7 +207,7 @@ def _run_4o6_svdq_moe_chunk(
         hidden_states, grouped_gemm_mask, input_global_scale
     )
     workspace_logical = workspace.permute(1, 2, 0)
-    flashinfer_cutedsl_grouped_gemm_nt_masked(
+    dispatch_grouped_gemm_nt_masked(
         (aq, aq_sf),
         (w1.permute(1, 2, 0), w1_blockscale),
         workspace_logical,
@@ -234,7 +234,7 @@ def _run_4o6_svdq_moe_chunk(
     )
 
     out_logical = out.permute(1, 2, 0)
-    flashinfer_cutedsl_grouped_gemm_nt_masked(
+    dispatch_grouped_gemm_nt_masked(
         (diq, diq_sf),
         (w2.permute(1, 2, 0), w2_blockscale),
         out_logical,

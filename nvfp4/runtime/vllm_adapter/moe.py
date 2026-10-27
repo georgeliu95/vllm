@@ -5,6 +5,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from enum import Enum
 import os
 from typing import Any
 
@@ -17,6 +18,23 @@ from .local_routing import finalize_local, prepare_local
 
 FactorLoader = Callable[..., bool | None]
 _MOE_LAYOUT_LOGGED = False
+_SM120_FALLBACK_LOGGED = False
+
+
+def _use_sm120_moe(device: torch.device) -> bool:
+    """Token-major SM120 path (sm120_moe.py) unless VLLM_NVFP4_SM120_MOE=0."""
+    if os.environ.get("VLLM_NVFP4_SM120_MOE", "1") != "1" or device.type != "cuda":
+        return False
+    return torch.cuda.get_device_capability(device)[0] == 12
+
+
+def _log_sm120_fallback(x: torch.Tensor, shared_experts: Any, layer: torch.nn.Module) -> None:
+    global _SM120_FALLBACK_LOGGED
+    if not _SM120_FALLBACK_LOGGED:
+        print(f"SM120_MOE_FALLBACK tokens={x.shape[0]} dtype={x.dtype} shared={shared_experts is not None} "
+              f"expert_map={layer.expert_map is not None} weighted_input={layer.apply_router_weight_on_input} "
+              f"activation={layer.activation}", flush=True)
+        _SM120_FALLBACK_LOGGED = True
 
 
 def _set_moe_scale_loading_metadata(layer: torch.nn.Module) -> None:
@@ -52,9 +70,12 @@ def make_batched_svdq_moe_kernel(
     moe_config: Any,
     experts_cls: type,
     routing_tables: tuple[torch.Tensor, torch.Tensor, torch.Tensor] | None = None,
+    *,
+    backend: Enum | None = None,
+    layer: torch.nn.Module | None = None,
 ) -> Any:
     """Build the local batched-expert kernel independently of deployment DP."""
-    del routing_tables
+    del routing_tables, backend, layer
     from vllm.model_executor.layers.fused_moe import modular_kernel as mk
     from vllm.model_executor.layers.fused_moe.prepare_finalize.batched import (
         BatchedPrepareAndFinalize,
@@ -197,6 +218,18 @@ def make_dynamic_moe_method(
                 self.w2_svdquant_us = layer.w2_svdquant_us
                 self.w2_svdquant_vh = layer.w2_svdquant_vh
             self.mainloop = None
+            self.sm120 = None
+            if activation_quant_range == 1536.0 and _use_sm120_moe(layer.w13_weight.device):
+                from .sm120_moe import Sm120SvdqMoE
+                self.sm120 = Sm120SvdqMoE(
+                    layer.w13_weight, self.w1_scale, w1_weight_global_scale,
+                    layer.w2_weight, self.w2_scale, w2_weight_global_scale,
+                    activation_quant_range,
+                    getattr(self, "w13_svdquant_us", None) if enable_w13_correction else None,
+                    getattr(self, "w13_svdquant_vh", None) if enable_w13_correction else None,
+                    getattr(self, "w2_svdquant_us", None) if enable_w2_correction else None,
+                    getattr(self, "w2_svdquant_vh", None) if enable_w2_correction else None,
+                )
             if os.environ.get("VLLM_NVFP4_MAINLOOP_FUSION") == "1":
                 from .mainloop import MainloopMoE
                 if rank not in (None, 64) or not (enable_w13_correction and enable_w2_correction):
@@ -305,6 +338,19 @@ def make_dynamic_moe_method(
             shared_experts_input: torch.Tensor | None,
         ) -> torch.Tensor:
             """Use the qualified token-major fusion before batched dispatch."""
+            sm120 = getattr(self.moe_kernel.fused_experts, "sm120", None)
+            # Shared experts: the batched prepare/finalize this path replaces is synchronous, so the modular
+            # kernel never runs them (it only does in its async-finalize branch); vLLM's runner does.
+            if (sm120 is not None and x.shape[0] > 0
+                    and not self.moe_kernel.prepare_finalize.supports_async()
+                    and layer.expert_map is None
+                    and not layer.apply_router_weight_on_input
+                    and layer.global_num_experts == sm120.experts
+                    and x.dtype == torch.bfloat16
+                    and str(getattr(layer.activation, "value", layer.activation)) == "silu"):
+                return sm120(x, topk_ids, topk_weights)
+            if sm120 is not None:
+                _log_sm120_fallback(x, shared_experts, layer)
             mainloop = getattr(self.moe_kernel.fused_experts, "mainloop", None)
             if (mainloop is not None and 0 < x.shape[0] <= 16384
                     and shared_experts is None and layer.expert_map is None
@@ -389,6 +435,8 @@ def make_dynamic_moe_method(
         if rank is not None
         else "RuntimeDynamicNvFp4FusedMoE"
     )
+    DynamicExperts.__name__ = DynamicMoeMethod.__name__ + "Experts"
+    DynamicMoeMethod.experts_class = DynamicExperts
     return DynamicMoeMethod
 
 

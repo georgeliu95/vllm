@@ -18,6 +18,19 @@ DISABLE_MOE_W13_SVDQ_ENV: Final = "VLLM_NVFP4_DISABLE_MOE_W13_SVDQ"
 DISABLE_MOE_W2_SVDQ_ENV: Final = "VLLM_NVFP4_DISABLE_MOE_W2_SVDQ"
 
 
+def _export(cls: type) -> type:
+    """Make a factory-built class picklable by reference.
+
+    vLLM spawns its engine and worker processes when CUDA is already initialized and pickles the quant
+    config into them; standard pickle stores classes by module and qualified name. Every spawned process
+    runs this adapter's sitecustomize, which rebuilds the same classes and registers them here first.
+    """
+    cls.__qualname__ = cls.__name__
+    cls.__module__ = __name__
+    globals()[cls.__name__] = cls
+    return cls
+
+
 def _configure_flashinfer_quantization(config: RuntimeConfig) -> None:
     os.environ["FLASHINFER_NVFP4_4OVER6"] = (
         "1" if config.four_over_six_enabled else "0"
@@ -71,10 +84,10 @@ def _patch_dynamic_dense(config: RuntimeConfig) -> None:
 
     from .linear import make_dynamic_linear_method
 
-    linear_method = make_dynamic_linear_method(
+    linear_method = _export(make_dynamic_linear_method(
         modelopt.ModelOptNvFp4LinearMethod,
         config.activation_quant_range,
-    )
+    ))
     modelopt.ModelOptNvFp4LinearMethod = linear_method
     modelopt.ModelOptNvFp4Config.LinearMethodCls = linear_method
 
@@ -86,11 +99,11 @@ def _patch_dense_svdq(config: RuntimeConfig) -> None:
 
     from .linear import make_svdq_linear_method
 
-    linear_method = make_svdq_linear_method(
+    linear_method = _export(make_svdq_linear_method(
         modelopt.ModelOptNvFp4LinearMethod,
         config.rank,
         enable_correction=os.environ.get(DISABLE_DENSE_SVDQ_ENV) != "1",
-    )
+    ))
     modelopt.ModelOptNvFp4LinearMethod = linear_method
     modelopt.ModelOptNvFp4Config.LinearMethodCls = linear_method
 
@@ -116,6 +129,8 @@ def _patch_dynamic_moe(config: RuntimeConfig) -> None:
             not disable_all and os.environ.get(DISABLE_MOE_W2_SVDQ_ENV) != "1"
         ),
     )
+    _export(moe_method)
+    _export(moe_method.experts_class)
     modelopt.ModelOptNvFp4FusedMoE = moe_method
     modelopt.ModelOptNvFp4Config.FusedMoEMethodCls = moe_method
 
