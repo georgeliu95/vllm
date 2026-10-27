@@ -48,6 +48,24 @@ def _tactic_table() -> dict[tuple[int, int], tuple[list[int], list[int]]]:
     return _tactics
 
 
+_pdl_early_safe: bool | None = None
+
+
+def pdl_early_safe() -> bool:
+    """Whether the loaded module declares that a preceding kernel may trigger PDL early (every read of data the
+    preceding kernel writes happens after griddepcontrol.wait, in all warp roles)."""
+    global _pdl_early_safe
+    if _pdl_early_safe is None:
+        if not os.environ.get("VLLM_NVFP4_SVDQ_SO"):
+            _pdl_early_safe = False  # no fused GEMM module configured: nothing to launch early
+        else:
+            try:
+                _pdl_early_safe = bool(module().nvfp4_svdquant_gemm_pdl_early_safe())
+            except AttributeError:
+                _pdl_early_safe = False
+    return _pdl_early_safe
+
+
 def tactic_for(m: int, n: int, k: int, rank: int) -> int:
     entry = _tactic_table().get((n, k))
     if entry is not None:
@@ -106,6 +124,20 @@ def _(x, vh, alpha):
     return x.new_empty((x.shape[0], vh.shape[0]), dtype=torch.bfloat16)
 
 
+_lora_scratch_bufs: dict[torch.device, tuple[torch.Tensor, torch.Tensor]] = {}
+
+
+def _lora_scratch(device: torch.device) -> tuple[torch.Tensor, torch.Tensor]:
+    """Per-device scratch of dyn_quant_lora's cooperative path: per-block maxima and LoRA partial sums
+    (k / 256 slices x m <= 64 rows x rank 64; 1 MiB covers K <= 16384)."""
+    bufs = _lora_scratch_bufs.get(device)
+    if bufs is None:
+        bufs = (torch.zeros(2048, dtype=torch.float32, device=device),
+                torch.zeros(64 * 64 * 64, dtype=torch.float32, device=device))
+        _lora_scratch_bufs[device] = bufs
+    return bufs
+
+
 @torch.library.custom_op("nvfp4_opt::dyn_quant_lora", mutates_args=("inv", "alpha"))
 def dyn_quant_lora(x: torch.Tensor, inv: torch.Tensor, alpha: torch.Tensor, weight_global_scale: torch.Tensor,
                    quant_range: float, vh: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
@@ -116,10 +148,12 @@ def dyn_quant_lora(x: torch.Tensor, inv: torch.Tensor, alpha: torch.Tensor, weig
 
     ext = dyn_quant_extension()
     matrix = x.reshape(-1, x.shape[-1]).contiguous()
-    if ext.dyn_quant_lora_supported(matrix.shape[0], matrix.shape[1]):
+    if vh.shape[0] == 64 and ext.dyn_quant_lora_supported(matrix.shape[0], matrix.shape[1]):
         n = matrix.numel()
+        scratch, partials = _lora_scratch(matrix.device)
         q, s, d = ext.dyn_quant_lora(matrix, inv, alpha, weight_global_scale,
-                                     _reciprocal(quant_range, 0 < n <= TRITON_REFERENCE_MAX_NUMEL), True, vh)
+                                     _reciprocal(quant_range, 0 < n <= TRITON_REFERENCE_MAX_NUMEL), True, vh,
+                                     scratch, partials, pdl_early_safe())
         return q, s, d
     q, s = torch.ops.nvfp4_opt.dyn_quant(matrix, inv, alpha, weight_global_scale, quant_range, True)
     return q, s, torch.ops.nvfp4_opt.lora_down_scaled(matrix, vh, alpha)

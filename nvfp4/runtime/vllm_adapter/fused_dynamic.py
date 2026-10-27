@@ -101,7 +101,7 @@ def dyn_quant_extension():
         from torch.utils.cpp_extension import load
 
         csrc = Path(__file__).with_name("csrc")
-        _ext = load(name="nvfp4_opt_dyn_quant_v4",
+        _ext = load(name="nvfp4_opt_dyn_quant_v8",
                     sources=[str(csrc / "dyn_quant.cu"), str(csrc / "lora_down.cu")],
                     extra_cuda_cflags=["-O3", "-gencode=arch=compute_120a,code=sm_120a"])
     return _ext
@@ -124,7 +124,7 @@ def dyn_quant(x: torch.Tensor, inv: torch.Tensor, alpha: torch.Tensor, weight_gl
     n = matrix.numel()
     return tuple(dyn_quant_extension().dyn_quant(
         matrix, inv, alpha, weight_global_scale, _reciprocal(quant_range, 0 < n <= TRITON_REFERENCE_MAX_NUMEL),
-        _quant_scratch[dev], four_over_six))
+        _quant_scratch[dev], four_over_six, False))  # no early PDL trigger: see dyn_quant_kernel
 
 
 @dyn_quant.register_fake
