@@ -4,11 +4,13 @@
 
 from __future__ import annotations
 
+import os
 from collections.abc import Callable
 
 import torch
 
-from .quantization import dynamic_global_scale
+from . import fused_dynamic  # noqa: F401  registers torch.ops.nvfp4_opt.*
+from .quantization import FOUR_OVER_SIX_QUANT_RANGE, STANDARD_NVFP4_QUANT_RANGE
 
 
 def svdq_us_needs_output_sharding(
@@ -37,8 +39,69 @@ def _make_parameter(
     )
 
 
+# torch.ops is reached only from module-level helpers: vLLM cloudpickles the quant config, which pickles
+# the local DynamicLinearMethod class by value, and cloudpickle cannot pickle the torch.ops namespace
+# that a method body naming ``torch.ops`` would drag in.
+def _write_dynamic_scale(layer: torch.nn.Module, x: torch.Tensor, quant_range: float) -> None:
+    """One launch writes the inv / alpha the reference computed with dynamic_global_scale +
+    multiply + two copy_ (see fused_dynamic.py)."""
+    torch.ops.nvfp4_opt.dynamic_scale_(
+        x, layer.input_global_scale_inv, layer.alpha, layer.weight_global_scale, quant_range
+    )
+
+
+def _apply_fused_dynamic_cutlass(
+    layer: torch.nn.Module, x: torch.Tensor, bias: torch.Tensor | None, quant_range: float
+) -> torch.Tensor:
+    """FlashInferCutlassNvFp4LinearKernel.apply_weights with the dynamic scale and the activation
+    quantization (standard or 4o6, chosen by the quant range) done by one kernel (nvfp4_opt::dyn_quant)."""
+    from vllm.model_executor.layers.quantization.utils.nvfp4_utils import (
+        pad_nvfp4_activation_for_cutlass,
+        slice_nvfp4_output,
+    )
+    from vllm.utils.flashinfer import flashinfer_scaled_fp4_mm
+
+    output_size = layer.output_size_per_partition
+    x_fp4, x_blockscale = torch.ops.nvfp4_opt.dyn_quant(
+        x, layer.input_global_scale_inv, layer.alpha, layer.weight_global_scale, quant_range,
+        quant_range == FOUR_OVER_SIX_QUANT_RANGE,
+    )
+    x_fp4 = pad_nvfp4_activation_for_cutlass(x_fp4, getattr(layer, "weights_padding_cols", 0))
+    out = flashinfer_scaled_fp4_mm(
+        x_fp4, layer.weight, x_blockscale.view(torch.float8_e4m3fn), layer.weight_scale, layer.alpha,
+        x.dtype, backend="cutlass",
+    )
+    out = slice_nvfp4_output(out, output_size)
+    if bias is not None:
+        out = out + bias
+    return out.view(*x.shape[:-1], output_size)
+
+
+def _fused_svdq_eligible(method: object, layer: torch.nn.Module) -> bool:
+    """The SM120 fused SVDQ GEMM (svdq_fused.py) covers 4o6 activations, unpadded FlashInfer-CUTLASS
+    weight layouts; it is enabled by pointing VLLM_NVFP4_SVDQ_SO at the built module."""
+    return (
+        bool(os.environ.get("VLLM_NVFP4_SVDQ_SO"))
+        and os.environ.get("FLASHINFER_NVFP4_4OVER6") == "1"
+        and type(getattr(method, "kernel", None)).__name__ == "FlashInferCutlassNvFp4LinearKernel"
+        and getattr(layer, "weights_padding_cols", 0) == 0
+        and layer.weight.shape[0] == layer.output_size_per_partition
+    )
+
+
+def _apply_fused_svdq(layer: torch.nn.Module, x: torch.Tensor) -> torch.Tensor:
+    from .svdq_fused import svdq_linear_4o6
+
+    return svdq_linear_4o6(layer, x, FOUR_OVER_SIX_QUANT_RANGE)
+
+
 def make_dynamic_linear_method(base_class: type, quant_range: float) -> type:
     """Build a LinearMethod that recomputes activation global scale per call."""
+
+    fuse_quant = (
+        quant_range in (STANDARD_NVFP4_QUANT_RANGE, FOUR_OVER_SIX_QUANT_RANGE)
+        and os.environ.get("VLLM_NVFP4_FUSED_DYN_QUANT", "1") == "1"
+    )
 
     class DynamicLinearMethod(base_class):
         def apply(
@@ -47,11 +110,9 @@ def make_dynamic_linear_method(base_class: type, quant_range: float) -> type:
             x: torch.Tensor,
             bias: torch.Tensor | None = None,
         ) -> torch.Tensor:
-            global_scale, dequant_scale = dynamic_global_scale(x, quant_range)
-            dynamic_alpha = dequant_scale * layer.weight_global_scale
-            with torch.no_grad():
-                layer.input_global_scale_inv.copy_(global_scale)
-                layer.alpha.copy_(dynamic_alpha)
+            if fuse_quant and type(self.kernel).__name__ == "FlashInferCutlassNvFp4LinearKernel":
+                return _apply_fused_dynamic_cutlass(layer, x, bias, quant_range)
+            _write_dynamic_scale(layer, x, quant_range)
             return super().apply(layer, x, bias)
 
     DynamicLinearMethod.__name__ = "RuntimeDynamicNvFp4LinearMethod"
@@ -118,6 +179,8 @@ def make_svdq_linear_method(
             x: torch.Tensor,
             bias: torch.Tensor | None = None,
         ) -> torch.Tensor:
+            if enable_correction and bias is None and _fused_svdq_eligible(self, layer):
+                return _apply_fused_svdq(layer, x)
             quantized = super().apply(layer, x, bias)
             if not enable_correction:
                 return quantized

@@ -8,6 +8,7 @@ import os
 from pathlib import Path
 from typing import Final
 
+from . import fused_dynamic
 from .config import RuntimeConfig, load_runtime_config
 
 CHECKPOINT_ENV: Final = "VLLM_NVFP4_CHECKPOINT"
@@ -49,12 +50,15 @@ def _patch_activation_quantizers(config: RuntimeConfig) -> None:
         backend="none",
         padded_n=None,
     ):
-        return quantize_dense_4o6(
-            input,
-            input_global_scale,
-            padded_n=padded_n,
-            swizzled_layout=is_sf_swizzled_layout,
-        )
+        if padded_n is not None and padded_n != input.shape[-1]:
+            return quantize_dense_4o6(
+                input,
+                input_global_scale,
+                padded_n=padded_n,
+                swizzled_layout=is_sf_swizzled_layout,
+            )
+        # Opaque custom op so torch.compile can trace the 4o6 dense path.
+        return fused_dynamic.quant_4o6_e4m3(input, input_global_scale, is_sf_swizzled_layout)
 
     custom_ops.scaled_fp4_quant = scaled_fp4_quant
     cutlass_linear.scaled_fp4_quant = scaled_fp4_quant
